@@ -1,65 +1,78 @@
-// #include <Wire.h>
 #include <I2C.h>
 
-  float temperature = 0;
-  int defaultAddress = 0x5A;      //5A = 1011010 --> appending 0 for write bit to end makes 10110100 = B4 nevermind don't need this
+  int defaultAddress = 0x5A;
   int objRegister = 0x07;
-  uint8_t errMessage = 0;   //No errors for I2c.read
-  int dataBits1 = 0;
-  int dataBits2 = 0;
-  uint8_t errBits = 0;
-  int result;
   int numBytes = 3;
 
-
+/*
   int tomaxAdd = 0x00;
   int tominAdd = 0x01;
   int tomax = 0;
   int tomin = 0;
+*/
 
 void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600);  //50kHz (must be in range 10kHz-100kHz for SMBus
+  Serial.begin(9600);
   I2c.begin();
-  //I2c.timeOut(500);
-  I2c.pullup(true);     //Unsure if need physical resistors with this as well
+  I2c.timeOut(100);
+  I2c.pullup(true);
+  csvSetup();
 }
 
+void csvSetup(){
+  Serial.print("Temperature, ");
+  Serial.println("Time");
+}
+
+float readSensor(int sensorAddress, int registerAddress, int numBytes){
+  int errMessage = I2c.read(sensorAddress, registerAddress, numBytes);
+  float seconds = millis();
+  seconds = seconds/1000;                   //can't do in 1 line for some reason
+  if (errMessage != 0){
+    Serial.print("Error Number: ");
+    Serial.print(errMessage, DEC);
+    Serial.print(",");
+    Serial.print("Available Bytes: ");
+    Serial.println(I2c.available());
+    return errMessage;
+  }
+  else {
+    int firstByte = I2c.receive() << 8;     //uint8_t not working for some reason
+    int secondByte = I2c.receive() << 8;
+    int result = firstByte;
+    result <<= 8;      //left shift by 8
+    result |= secondByte;
+    //float temp = (result*.02 - 273)*9/5+32;          //convert to C then to F via formula on datasheet
+    int temp = ((result*.02 - 273)*9/5+32)*100;
+    float dispTemp = temp;
+    dispTemp /= 100;
+    uint8_t errByte = I2c.receive() << 8;
+    if (errByte == 0){
+      Serial.print(dispTemp, 2);
+      Serial.print(",");
+      Serial.println(seconds, DEC);
+    }
+    /*
+    if (errByte == 0){
+      Serial.print("Byte 1: ");
+      Serial.print(firstByte, HEX);
+      Serial.print(", Byte 2: ");
+      Serial.println(secondByte, HEX);
+    }
+    */
+    else {
+      Serial.print("Error Reading from Buffer");
+      Serial.print(",");
+      Serial.println(seconds, DEC);
+    }
+    return result;
+  }
+      
+}
 
 void loop() {
-  // put your main code here, to run repeatedly:
   
-  errMessage = I2c.read(defaultAddress, objRegister, numBytes);
+  readSensor(defaultAddress, objRegister, numBytes);
+  delay(50);                             
 
-  //errMessage = I2c.read(defaultAddress, , numBytes);
-  
-  
-  if (errMessage != 0)
-  {
-    Serial.print("Error number: ");
-    Serial.print(errMessage, DEC);
-    Serial.print("\n");
-  }
-  else
-  {
-      dataBits1 = I2c.receive() << 8;
-      dataBits2 = I2c.receive() << 8;
-      result = dataBits1;
-      result <<= 8;
-      result |= dataBits2;
-      errBits = I2c.receive() << 8;
-      //Serial.print("Byte 1: %d \n", byte1);
-      Serial.print("Data Bits: ");
-      Serial.print(result, DEC);
-      //Serial.print(dataBits2, DEC);
-      Serial.print("Error Code: ");
-      Serial.print(errBits, DEC);
-      Serial.print("\n");
-      //Serial.print("Byte 2: %d \n", byte2);
-      //Serial.print("Byte 3: %d \n", byte3);
-  }
-  
-  delay(1000);
-  
-  //I2c.available(); 
 }
