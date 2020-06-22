@@ -24,7 +24,7 @@ void csvSetup(){
   Serial.println("Time");
 }
 
-float readSensor(int sensorAddress, int registerAddress, int numBytes){
+void readSensor(int sensorAddress, int registerAddress, int numBytes){
   int errMessage = I2c.read(sensorAddress, registerAddress, numBytes);
   float seconds = millis();
   seconds = seconds/1000;                   //can't do in 1 line for some reason
@@ -37,35 +37,21 @@ float readSensor(int sensorAddress, int registerAddress, int numBytes){
     return errMessage;
   }
   else {
-    int firstByte = I2c.receive() << 8;     //uint8_t not working for some reason
-    int secondByte = I2c.receive() << 8;
-    int result = firstByte;
-    result <<= 8;      //left shift by 8
-    result |= secondByte;
+    uint8_t LSB = I2c.receive();                          //LSB first
+    uint8_t MSB = I2c.receive();
+    if (MSB > 0x80){
+      Serial.println("Error Flag Raised");
+    }
+    int result = MSB << 8;                                //MSB left shifted a byte
+    result |= LSB;
     //float temp = (result*.02 - 273)*9/5+32;          //convert to C then to F via formula on datasheet
     int temp = ((result*.02 - 273)*9/5+32)*100;
     float dispTemp = temp;
     dispTemp /= 100;
-    uint8_t errByte = I2c.receive() << 8;
-    if (errByte == 0){
-      Serial.print(dispTemp, 2);
-      Serial.print(",");
-      Serial.println(seconds, DEC);
-    }
-    /*
-    if (errByte == 0){
-      Serial.print("Byte 1: ");
-      Serial.print(firstByte, HEX);
-      Serial.print(", Byte 2: ");
-      Serial.println(secondByte, HEX);
-    }
-    */
-    else {
-      Serial.print("Error Reading from Buffer");
-      Serial.print(",");
-      Serial.println(seconds, DEC);
-    }
-    return result;
+    int PEC = I2c.receive();                              //Packet Error Code
+    Serial.print(dispTemp, 2);
+    Serial.print(",");
+    Serial.println(seconds, DEC);
   }
       
 }
@@ -73,6 +59,6 @@ float readSensor(int sensorAddress, int registerAddress, int numBytes){
 void loop() {
   
   readSensor(defaultAddress, objRegister, numBytes);
-  delay(50);                             
+  //delay(10);                             
 
 }

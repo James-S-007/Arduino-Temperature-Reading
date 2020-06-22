@@ -21,4 +21,4 @@ def graph(fileName, titleName):
     plt.title(titleName)
     plt.show()
 
-graph('1inHold.csv', "1inHold")
+graph('NewVersionTest2.csv', "NewVersionTest2")
