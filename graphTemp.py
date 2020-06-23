@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import csv
 
+
 def graph(fileName, titleName):
 
     times = []
@@ -10,7 +11,7 @@ def graph(fileName, titleName):
         plots = csv.reader(csvFile, delimiter = ',')
         count = 0
         for row in plots:
-            if count != 0:  
+            if count != 0 and row[0:1] != '\n':  
                 times.append(float(row[1]))
                 temperatures.append(float(row[0]))
             count += 1
@@ -20,5 +21,5 @@ def graph(fileName, titleName):
     plt.ylabel('Temperature (F)')
     plt.title(titleName)
     plt.show()
-
-graph('NewVersionTest2.csv', "NewVersionTest2")
+#graph('Test.csv', 'Test')
+#graph('NewVersionTest3.csv', "NewVersionTest3")

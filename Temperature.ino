@@ -44,7 +44,7 @@ void readSensor(int sensorAddress, int registerAddress, int numBytes){
     }
     int result = MSB << 8;                                //MSB left shifted a byte
     result |= LSB;
-    //float temp = (result*.02 - 273)*9/5+32;          //convert to C then to F via formula on datasheet
+    //float temp = (result*.02 - 273.15)*9/5+32;          //convert to C then to F via formula on datasheet
     int temp = ((result*.02 - 273)*9/5+32)*100;
     float dispTemp = temp;
     dispTemp /= 100;
