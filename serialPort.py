@@ -14,7 +14,7 @@ def cleanCSV(fileName):
                 f.write(line)
         f.close()
 
-fileName = "Test.csv"
+fileName = "24inPass.csv"
 
 
 serialPort = serial.Serial(port = "COM3", baudrate=9600,

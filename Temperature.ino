@@ -34,7 +34,7 @@ void readSensor(int sensorAddress, int registerAddress, int numBytes){
     Serial.print(",");
     Serial.print("Available Bytes: ");
     Serial.println(I2c.available());
-    return errMessage;
+    //return errMessage;
   }
   else {
     uint8_t LSB = I2c.receive();                          //LSB first
