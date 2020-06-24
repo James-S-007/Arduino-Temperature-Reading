@@ -1,6 +1,6 @@
-s#include <I2C.h>
+#include <I2C.h>
 
-  uint8_t defaultAddress = 0x5A;
+  uint8_t defaultAddress = 0x01;
   uint8_t ambientRegister = 0x06;
   uint8_t objRegister = 0x07;
   int numBytes = 3;
