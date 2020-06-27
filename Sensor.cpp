@@ -4,69 +4,77 @@
 
 const uint8_t Sensor::ambientTempRegister = 0x06;
 const uint8_t Sensor::objTempRegister = 0x07;
-int Sensor::objectsDetected = 0;                  //not yet used
 unsigned long Sensor::prevMillis = 0;             //for timeout
 bool Sensor::idle = true;
 uint8_t Sensor::numSensors = 0;
-uint8_t Sensor::numInactive = 0;
+uint8_t Sensor::numObjectsDetected = 0;
 float Sensor::maxTemp = 0;
 
 //static values to adjust
 int Sensor::timeoutTime = 5000;
-uint8_t Sensor::activatedThreshold = 1;
-uint8_t Sensor::tempThreshold = 7;
-
+uint8_t Sensor::activateThreshold = 1;
+uint8_t Sensor::deactivateThreshold = 0;          //number of required sensors that no longer detect an object to return to idle
+uint8_t Sensor::tempThreshold = 4;
 
 Sensor::Sensor(uint8_t addy){
   address = addy;
   active = true;
+  objectDetected = false;
   numSensors += 1;
+  ambientTemp = 0;
 }
 
-float Sensor::readTemp(uint8_t registerAddy){
-  int errMessage = I2c.read(this->address, registerAddy, 3);    //3 bytes from datasheet, LSB then MSB then PEC
-  if (errMessage != 0){
-    Serial.print("Error Number: ");
-    Serial.print(errMessage, DEC);
-    Serial.print(" while attempting to read from sensor: ");
+
+int Sensor::readTemp(uint8_t registerAddy){               //returns 100*temp (for greater speed)
+  int errTotal = 0;
+  uint8_t LSB;
+  uint8_t MSB;
+  uint8_t PEC;
+  errTotal += I2c._start();
+  errTotal += I2c._sendAddress(this->address<<1);              //left shifted with W bit (0)
+  errTotal += I2c._sendByte(registerAddy);                  
+  errTotal += I2c._start();
+  errTotal += I2c._sendAddress((this->address<<1)+1);       //left shifted with R bit (1)
+  errTotal += I2c._receiveByte(0xFF, &LSB);                 //demand ACK
+  errTotal += I2c._receiveByte(0xFF, &MSB);                 //demand ACK
+  errTotal += I2c._receiveByte(0x00, &PEC);                 //last byte; don't demand ACK
+  errTotal += I2c._stop();
+  if (errTotal != 0){
+    Serial.print("Error Reading from Sensor at Address: ");
     Serial.println(this->address, HEX);
-    return -1;
-  }
-  else {
-    uint8_t LSB = I2c.receive();                          //LSB first
-    uint8_t MSB = I2c.receive();
-    if (MSB > 0x80){
-      Serial.println("Error Flag Raised");
-    }
-    int result = MSB << 8;                                //MSB left shifted a byte
-    result |= LSB;
-    int temp = ((result*.02 - 273)*9/5+32)*100;
-    float dispTemp = temp;
-    dispTemp /= 100;
-    I2c.receive();                                        //Remove PEC from buffer
-    return dispTemp;
-  }
-}
-
-bool Sensor::checkTimeout(){
-  if (millis - prevMillis > timeoutTime){
-    return true;
+    return -1;                                          /////////////addition needed
   }
   else{
-    return false;
+    int result = MSB << 8;
+    result |= LSB;
+    result = ((result*.02 - 273)*9/5+32)*100;
+    return result;
   }
 }
 
 void Sensor::resetStatic(){
   maxTemp = 0;
-  numInactive = 0;
-  objectsDetected = 0;
 }
 
-void Sensor::setActive(bool act){
-  active = act;
+void Sensor::setObjectDetected(bool obj){
+  bool oldVal = objectDetected;
+  objectDetected = obj;
+  if (obj == true && obj != oldVal){                //only update number of objects detected if set is different from previous value
+    numObjectsDetected += 1;
+  }
+  else if (obj == false && obj != oldVal){
+    numObjectsDetected -= 1;
+  }
 }
 
-bool Sensor::getActive(){
-  return active;
+bool Sensor::getObjectDetected(){
+  return objectDetected;
+}
+
+void Sensor::setAmbientTemp(int temp){
+  ambientTemp = temp;
+}
+
+int Sensor::getAmbientTemp(){
+  return ambientTemp;
 }

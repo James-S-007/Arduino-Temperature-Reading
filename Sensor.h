@@ -14,25 +14,29 @@ class Sensor
   public:
     static const uint8_t ambientTempRegister;
     static const uint8_t objTempRegister;
-    static int objectsDetected;
     static unsigned long prevMillis;
     static int timeoutTime;
-    static uint8_t activatedThreshold;     //to save space
+    static uint8_t activateThreshold;     //to save space
+    static uint8_t deactivateThreshold;
     static bool idle;                      //idle state of state machine
     static uint8_t numSensors;
-    static uint8_t numInactive;
+    static uint8_t numObjectsDetected;
     static uint8_t tempThreshold;
     static float maxTemp;
   
     Sensor(uint8_t addy);
-    float readTemp(uint8_t registerAddy);
+    int readTemp(uint8_t registerAddy);
     bool checkTimeout();
     void resetStatic();
-    void setActive(bool act);
-    bool getActive();
+    void setObjectDetected(bool obj);
+    bool getObjectDetected();
+    void setAmbientTemp(int);
+    int getAmbientTemp();
   private:
     uint8_t address;
     bool active;
+    bool objectDetected;
+    int ambientTemp;
 };
 
 #endif
