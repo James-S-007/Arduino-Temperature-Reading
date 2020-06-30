@@ -21,8 +21,9 @@ class Sensor
     static bool idle;                      //idle state of state machine
     static uint8_t numSensors;
     static uint8_t numObjectsDetected;
-    static uint8_t tempThreshold;
+    static int tempThreshold;
     static float maxTemp;
+    static int maxTempThreshold;
   
     Sensor(uint8_t addy);
     int readTemp(uint8_t registerAddy);

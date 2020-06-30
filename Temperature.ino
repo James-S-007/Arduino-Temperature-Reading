@@ -1,12 +1,19 @@
 #include <I2C.h>
 #include "Sensor.h"
 
+int LED_B = 7;
+int LED_G = 6;
+int LED_R = 5;
+
 Sensor Sensor1(0x5A);
 Sensor Sensor2(0x01);
 Sensor Sensor3(0x02);
 Sensor SensorArr[3] = {Sensor1, Sensor2, Sensor3};
 
 void setup() {
+  pinMode(LED_B, OUTPUT);
+  pinMode(LED_G, OUTPUT);
+  pinMode(LED_R, OUTPUT);
   Serial.begin(9600);
   I2c.begin();
   I2c.timeOut(100);
@@ -26,7 +33,8 @@ void loop(){
         if (Sensor::numObjectsDetected >= Sensor::activateThreshold){
           Sensor::idle = false;                                                                                ///////////////////////////////////Add sensors activated and count for reset
           Sensor::prevMillis = millis();                                                                    //record time when leaving idle for timeout
-          Serial.println("Object Detected");
+          //Serial.println("Object Detected");
+          digitalWrite(LED_B, HIGH);
           break;
         }
       }
@@ -53,9 +61,11 @@ void loop(){
       }
       if (millis() - Sensor::prevMillis > Sensor::timeoutTime){             //timeout return to idle
         Sensor::idle = true;
+        digitalWrite(LED_B, LOW);
         Serial.println("Timeout Activated");
         Serial.print("Max Temp of Object: ");
         Serial.println(Sensor::maxTemp, DEC);
+        outputPassFail(LED_G, LED_R, Sensor::maxTempThreshold, Sensor::maxTemp);
         SensorArr[i].resetStatic();
         for (int i = 0; i < Sensor::numSensors; i++){                       //make all sensors active when returning to idle
           SensorArr[i].setObjectDetected(false);
@@ -64,9 +74,11 @@ void loop(){
       }
       else if (Sensor::numObjectsDetected <= Sensor::deactivateThreshold){                          //no sensors active return to idle
         Sensor::idle = true;
+        digitalWrite(LED_B, LOW);
         Serial.println("Sensors no longer detecting objects");
         Serial.print("Max Temp of Object: ");
         Serial.println(Sensor::maxTemp, DEC);
+        outputPassFail(LED_G, LED_R, Sensor::maxTempThreshold, Sensor::maxTemp);
         SensorArr[i].resetStatic();
         for (int i = 0; i < Sensor::numSensors; i++){                      //make all sensors active when returning to idle
           SensorArr[i].setObjectDetected(false);
@@ -74,5 +86,20 @@ void loop(){
         break;                                                             //leave for loop and return to idle
       }
     }
+  }
+}
+
+void outputPassFail(int greenPIN, int redPIN, int maxThreshold, int maxTemp){
+  if (maxTemp > maxThreshold*100){
+    for (int i = 0; i < 3; i++){
+      digitalWrite(redPIN, HIGH);              //flash 3 times if temp is too high
+      delay(500);
+      digitalWrite(redPIN, LOW);
+    }
+  }
+  else {
+    digitalWrite(greenPIN, HIGH);              //pass
+    delay(1000);
+    digitalWrite(greenPIN, LOW);
   }
 }
