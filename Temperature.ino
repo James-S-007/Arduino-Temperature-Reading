@@ -1,9 +1,26 @@
 #include <I2C.h>
 #include "Sensor.h"
 
+
+
+/////////////////////////////////Next Implement Error Checking for sensors
+/*
+ * 
+ * Each has variable num consecutive errors
+ * Resets if can read from next cycle
+ * If not output: Error reading from sensor at address ..., try resetting program
+ * If problem persists, call technician or replace board
+ * delay(huge number)
+ * 
+ * 
+ * 
+ * 
+ */
+
+
 int LED_B = 7;
 int LED_G = 6;
-int LED_R = 5;
+int LED_R = 5;                            //Connected in parallel with speaker
 
 Sensor Sensor1(0x5A);
 Sensor Sensor2(0x01);
@@ -93,8 +110,9 @@ void outputPassFail(int greenPIN, int redPIN, int maxThreshold, int maxTemp){
   if (maxTemp > maxThreshold*100){
     for (int i = 0; i < 3; i++){
       digitalWrite(redPIN, HIGH);              //flash 3 times if temp is too high
-      delay(500);
+      delay(250);
       digitalWrite(redPIN, LOW);
+      delay(250);
     }
   }
   else {

@@ -15,7 +15,7 @@ int Sensor::timeoutTime = 5000;
 uint8_t Sensor::activateThreshold = 1;
 uint8_t Sensor::deactivateThreshold = 0;          //number of required sensors that no longer detect an object to return to idle
 int Sensor::tempThreshold = 4;
-int Sensor::maxTempThreshold = 90;
+int Sensor::maxTempThreshold = 85;
 
 Sensor::Sensor(uint8_t addy){
   address = addy;
