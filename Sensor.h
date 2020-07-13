@@ -18,17 +18,15 @@ class Sensor
     static int timeoutTime;
     static uint8_t activateThreshold;     //to save space
     static uint8_t deactivateThreshold;
-    static bool idle;                      //idle state of state machine
     static uint8_t numSensors;
     static uint8_t numObjectsDetected;
     static int tempThreshold;
-    static float maxTemp;
+    static int maxTemp;
     static int maxTempThreshold;
   
     Sensor(uint8_t addy);
     int readTemp(uint8_t registerAddy);
     bool checkTimeout();
-    void resetStatic();
     void setObjectDetected(bool obj);
     bool getObjectDetected();
     void setAmbientTemp(int);

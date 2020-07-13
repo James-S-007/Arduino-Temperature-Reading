@@ -5,10 +5,9 @@
 const uint8_t Sensor::ambientTempRegister = 0x06;
 const uint8_t Sensor::objTempRegister = 0x07;
 unsigned long Sensor::prevMillis = 0;             //for timeout
-bool Sensor::idle = true;
 uint8_t Sensor::numSensors = 0;
 uint8_t Sensor::numObjectsDetected = 0;
-float Sensor::maxTemp = 0;
+int Sensor::maxTemp = 0;
 
 //static values to adjust
 int Sensor::timeoutTime = 5000;
@@ -60,10 +59,6 @@ int Sensor::readTemp(uint8_t registerAddy){               //returns 100*temp (fo
     result = ((result*.02 - 273.15)*9/5+32)*100;
     return result;
   }
-}
-
-void Sensor::resetStatic(){
-  maxTemp = 0;
 }
 
 void Sensor::setObjectDetected(bool obj){
