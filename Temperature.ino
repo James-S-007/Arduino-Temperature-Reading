@@ -2,22 +2,6 @@
 #include "Sensor.h"
 
 
-
-/////////////////////////////////Next Implement Error Checking for sensors
-/*
- * 
- * Each has variable num consecutive errors
- * Resets if can read from next cycle
- * If not output: Error reading from sensor at address ..., try resetting program
- * If problem persists, call technician or replace board
- * delay(huge number)
- * 
- * 
- * 
- * 
- */
-
-
 int LED_B = 7;
 int LED_G = 6;
 int LED_R = 5;                            //Connected in parallel with speaker
@@ -37,6 +21,8 @@ void setup() {
   I2c.pullup(true);
 
 }
+
+//////////////////195.69 on sensor 5A
 
 void loop(){
   while (Sensor::idle == true){  

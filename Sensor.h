@@ -11,7 +11,7 @@
 
 class Sensor
 {
-  public:
+  public:  
     static const uint8_t ambientTempRegister;
     static const uint8_t objTempRegister;
     static unsigned long prevMillis;
