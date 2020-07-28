@@ -6,7 +6,7 @@ https://chrisramsay.co.uk/posts/2017/09/arduino-and-multiple-mlx90614-sensors-ta
 
   uint8_t defaultSlaveAddress = 0x5A;
   uint8_t universalSlaveAddress = 0x00;
-  uint8_t newSlaveAddress = 0x01;         //Valid addresses are from 0x00 to 0x7F (supports 127 devices)
+  uint8_t newSlaveAddress = 0x10;         //Valid addresses are from 0x00 to 0x7F (supports 127 devices)
   uint8_t SMBusAddress = 0x2E;            //EEPROM is 001xxxxx, SMBus Address is 0x0E so maybe the sum? (2E)
 
   uint8_t objRegister = 0x07;
@@ -29,7 +29,11 @@ void setup() {
   Serial.println(newAddress, HEX);
   Serial.println("Power Cycle Device");
   Serial.println("Testing will resume in 10 seconds");
-  delay(10000);
+  for (int i = 10; i > 0; i--){
+    Serial.println(i);
+    delay(1000);
+  }
+  //delay(10000);
   Serial.println("Attempting to read SMBus Address with new address");
   newAddress = readSMBusAddress(newSlaveAddress);
   Serial.println("SMBus Address: ");

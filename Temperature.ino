@@ -6,19 +6,42 @@ int LED_B = 7;                            //Blue LED = object detected
 int LED_G = 6;                            //Green LED = below max temp threshold
 int LED_R = 5;                            //Red LED = above max temp threshold, connected in parallel with speaker
 
-Sensor Sensor1(0x5A);
-Sensor Sensor2(0x01);
-Sensor Sensor3(0x02);
-Sensor SensorArr[3] = {Sensor1, Sensor2, Sensor3};
+
+Sensor Sensor1(0x01);
+Sensor Sensor2(0x02);
+Sensor Sensor3(0x03);
+Sensor Sensor4(0x04);
+Sensor Sensor5(0x05);
+Sensor Sensor6(0x06);
+Sensor Sensor7(0x07);
+Sensor Sensor8(0x08);
+Sensor Sensor9(0x09);
+Sensor SensorA(0x0A);
+Sensor SensorB(0x0B);
+Sensor SensorC(0x0C);
+Sensor SensorD(0x0D);
+Sensor SensorE(0x0E);
+Sensor SensorF(0x0F);
+Sensor Sensor10(0x10);
+
+Sensor SensorArr[16] = {Sensor1, Sensor2, Sensor3, Sensor4, Sensor5, Sensor6, Sensor7, Sensor8, Sensor9, SensorA, SensorB, SensorC, SensorD, SensorE, SensorF, Sensor10};
+
+//Sensor SensorArr[8] = {Sensor9, SensorA, SensorB, SensorC, SensorD, SensorE, SensorF, Sensor10};
+//Sensor SensorArr[8] = {Sensor1, Sensor2, Sensor3, Sensor4, Sensor5, Sensor6, Sensor7, Sensor8};
+//Sensor SensorArr[1] = {Sensor1};
 
 void setup() {
   pinMode(LED_B, OUTPUT);
   pinMode(LED_G, OUTPUT);
   pinMode(LED_R, OUTPUT);
   Serial.begin(9600);
+  Serial.println("Initializing");
   I2c.begin();
   I2c.timeOut(100);
   I2c.pullup(true);
+  initialization(SensorArr);
+  delay(600);
+  Serial.println("Completed Initialization");
 
 }
 
@@ -31,11 +54,25 @@ void loop(){                  //simple state machine
   resetSensors(SensorArr, Sensor::numSensors);
 }
 
+void initialization(Sensor SensorArr[]){
+  for (int i = 0; i < Sensor::numSensors; i++){
+    unsigned long sum = 0;
+    for (int j = 0; j < 10; j++){
+      sum += SensorArr[i].readTemp(Sensor::ambientTempRegister);
+    }
+    sum /= 10;
+    SensorArr[i].setAmbientTemp(sum);
+    Serial.print("Sensor");
+    Serial.print(i+1, DEC);
+    Serial.print(" Initial Ambient Temp: ");
+    Serial.println(sum, DEC);
+  }
+}
 
 int idleState(Sensor SensorArr[], int numSensors, uint8_t ambientTempRegister, uint8_t objTempRegister, int tempThreshold, uint8_t activateThreshold, int blueLED){
   while (true){
     for (int i = 0; i < numSensors; i++){
-      SensorArr[i].setAmbientTemp(SensorArr[i].readTemp(Sensor::ambientTempRegister));                                                            //update ambient temperature    
+      SensorArr[i].updateAmbientTemp(SensorArr[i].readTemp(Sensor::ambientTempRegister));                                                            //update ambient temperature    
       if (abs(SensorArr[i].readTemp(Sensor::objTempRegister) - SensorArr[i].getAmbientTemp()) > Sensor::tempThreshold*100){                       //object detected on sensor
         SensorArr[i].setObjectDetected(true);
         if (Sensor::numObjectsDetected >= Sensor::activateThreshold){                                                                             //leave idle if enough sensors have been activated

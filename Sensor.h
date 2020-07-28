@@ -31,6 +31,7 @@ class Sensor
     bool getObjectDetected();
     void setAmbientTemp(int);
     int getAmbientTemp();
+    void updateAmbientTemp(int);
   private:
     uint8_t address;
     bool active;
