@@ -13,7 +13,7 @@ int Sensor::maxTemp = 0;
 int Sensor::timeoutTime = 5000;
 uint8_t Sensor::activateThreshold = 1;
 uint8_t Sensor::deactivateThreshold = 0;          //number of required sensors that no longer detect an object to return to idle
-int Sensor::tempThreshold = 8;
+int Sensor::tempThreshold = 6;
 int Sensor::maxTempThreshold = 100;
 
 Sensor::Sensor(uint8_t addy){
@@ -22,6 +22,7 @@ Sensor::Sensor(uint8_t addy){
   objectDetected = false;
   numSensors += 1;
   ambientTemp = 0;
+  maxTempSensor = 0;
 }
 
 
@@ -74,6 +75,14 @@ void Sensor::setObjectDetected(bool obj){
 
 bool Sensor::getObjectDetected(){
   return objectDetected;
+}
+
+void Sensor::setMaxTempSensor(int temp){
+  maxTempSensor = temp;
+}
+
+int Sensor::getMaxTempSensor(){
+  return maxTempSensor;
 }
 
 void Sensor::setAmbientTemp(int temp){

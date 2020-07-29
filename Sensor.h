@@ -24,11 +24,13 @@ class Sensor
     static int maxTemp;
     static int maxTempThreshold;
   
-    Sensor(uint8_t addy);
-    int readTemp(uint8_t registerAddy);
+    Sensor(uint8_t);
+    int readTemp(uint8_t);
     bool checkTimeout();
-    void setObjectDetected(bool obj);
+    void setObjectDetected(bool);
     bool getObjectDetected();
+    void setMaxTempSensor(int);
+    int getMaxTempSensor();
     void setAmbientTemp(int);
     int getAmbientTemp();
     void updateAmbientTemp(int);
@@ -37,6 +39,7 @@ class Sensor
     bool active;
     bool objectDetected;
     int ambientTemp;
+    int maxTempSensor;
 };
 
 #endif

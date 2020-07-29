@@ -6,6 +6,7 @@ int LED_B = 7;                            //Blue LED = object detected
 int LED_G = 6;                            //Green LED = below max temp threshold
 int LED_R = 5;                            //Red LED = above max temp threshold, connected in parallel with speaker
 
+int iteration = 0;
 
 Sensor Sensor1(0x01);
 Sensor Sensor2(0x02);
@@ -51,6 +52,7 @@ void loop(){                  //simple state machine
   idleState(SensorArr, Sensor::numSensors, Sensor::ambientTempRegister, Sensor::objTempRegister, Sensor::tempThreshold, Sensor::activateThreshold, LED_B);
   int maxTemp = objDetectedState(SensorArr, Sensor::numSensors, Sensor::objTempRegister, Sensor::tempThreshold, Sensor::deactivateThreshold, Sensor::prevMillis, Sensor::timeoutTime, LED_B);
   outputPassFail(LED_B, LED_G, LED_R, Sensor::maxTempThreshold, maxTemp);
+  outputSensorTemps(SensorArr);
   resetSensors(SensorArr, Sensor::numSensors);
 }
 
@@ -96,6 +98,9 @@ int objDetectedState(Sensor SensorArr[], int numSensors, uint8_t objTempRegister
         Sensor::maxTemp = objTemp;
         SensorArr[i].setObjectDetected(true);
       }
+      if (objTemp > SensorArr[i].getMaxTempSensor()){
+        SensorArr[i].setMaxTempSensor(objTemp);
+      }
       if (abs(objTemp - SensorArr[i].getAmbientTemp()) < tempThreshold*100){                                                                      //object no longer detected on sensor
         SensorArr[i].setObjectDetected(false);
       }
@@ -117,6 +122,9 @@ int objDetectedState(Sensor SensorArr[], int numSensors, uint8_t objTempRegister
 
 
 void outputPassFail(int blueLED, int greenLED, int redLED, int maxThreshold, int maxTemp){
+  iteration += 1;
+  Serial.print("Iteration: ");
+  Serial.println(iteration, DEC);
   Serial.print("Max Temp of Object: ");
   Serial.println(Sensor::maxTemp, DEC);
   if (maxTemp > maxThreshold*100){
@@ -134,9 +142,20 @@ void outputPassFail(int blueLED, int greenLED, int redLED, int maxThreshold, int
   }
 }
 
+void outputSensorTemps(Sensor SensorArr[]){
+  for (int i = 0; i < Sensor::numSensors; i++){
+    Serial.print("Sensor ");
+    Serial.print(i+1, DEC);
+    Serial.print(" Max Temp: ");
+    Serial.println(SensorArr[i].getMaxTempSensor(), DEC);
+  }
+  Serial.println("");
+}
+
 void resetSensors(Sensor SensorArr[], int numSensors){                                        //reset maxtemp and make sure no sensors are detecting objects
   for (int i = 0; i < Sensor::numSensors; i++){
     SensorArr[i].setObjectDetected(false);
+    SensorArr[i].setMaxTempSensor(0);
   }
   Sensor::maxTemp = 0;
 }
