@@ -16,7 +16,7 @@ void setup() {
   I2c.begin();
   I2c.timeOut(100);
   I2c.pullup(true);
-  delay(5000);
+  delay(1000);
 
   Serial.println("Reading SMBusAddress on Universal SA");
   uint16_t origAddress = readSMBusAddress(universalSlaveAddress);

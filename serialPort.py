@@ -1,5 +1,5 @@
 import serial
-from graphTemp import graph
+#from graphTemp import graph
 
 def cleanCSV(fileName):
     with open(fileName, 'r') as f:
@@ -8,13 +8,13 @@ def cleanCSV(fileName):
         startFlag = False
         for line in lines:
             if line.find('Trial') != -1:
-                f.write('Trial, Sensor1, Sensor2, Sensor3, Sensor4, Sensor5, Sensor6, Sensor7, Sensor8, Sensor9, SensorA, SensorB, SensorC, SensorD, SensorE, SensorF, Sensor10, Max Temp, Max Recorded On Sensor\n')
+                f.write('Trial, Sensor1, Sensor2, Sensor3, Sensor4, Sensor5, Sensor6, Sensor7, Sensor8, Sensor9, SensorA, SensorB, SensorC, SensorD, SensorE, SensorF, Sensor10, Max Temp, Ambient Temp, Max Sen, Trigger Sen, Exit Time\n')
                 startFlag = True
             elif startFlag == True:
                 f.write(line)
         f.close()
 
-fileName = "24inPass.csv"
+fileName = "JamesTest.csv"
 
 
 serialPort = serial.Serial(port = "COM4", baudrate=9600,
