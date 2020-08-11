@@ -27,6 +27,8 @@ class Sensor
     static uint8_t triggerSensor;
   
     Sensor(uint8_t);
+    uint16_t readRAM(uint8_t);
+    bool writeRAM(uint8_t, uint8_t, uint8_t, uint8_t);
     int readTemp(uint8_t);
     uint8_t getAddy();
     bool checkTimeout();

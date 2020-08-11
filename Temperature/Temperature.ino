@@ -28,12 +28,12 @@ Sensor SensorF(0x0F);
 Sensor Sensor10(0x10);
 
 Sensor SensorArr[16] = {Sensor1, Sensor2, Sensor3, Sensor4, Sensor5, Sensor6, Sensor7, Sensor8, Sensor9, SensorA, SensorB, SensorC, SensorD, SensorE, SensorF, Sensor10};
+//Sensor SensorArr[1] = {Sensor1};
 
-//Sensor SensorArr[7] = {Sensor1, Sensor2, Sensor4, Sensor5, Sensor6, Sensor7, Sensor8};
 void setup() {
   pinMode(LED_B, OUTPUT);
   pinMode(LED_G, OUTPUT);
-  pinMode(LED_R, OUTPUT);
+  pinMode(LED_R, OUTPUT);  
   Serial.begin(9600);
   Serial.println("Initializing");
   I2c.begin();
@@ -47,6 +47,14 @@ void setup() {
 //////////////////195.69 on sensor 5A
 
 void loop(){                  //simple state machine
+  /*
+  for (int i = 0; i < Sensor::numSensors; i++){
+    Serial.print(SensorArr[i].readTemp(Sensor::objTempRegister));
+    Serial.print(", ");
+  }
+  delay(300);
+  Serial.println("");
+  */
   idleState(SensorArr, Sensor::numSensors, Sensor::ambientTempRegister, Sensor::objTempRegister, Sensor::tempThreshold, Sensor::activateThreshold, LED_B);
   int maxTemp = objDetectedState(SensorArr, Sensor::numSensors, Sensor::objTempRegister, Sensor::tempThreshold, Sensor::deactivateThreshold, Sensor::prevMillis, Sensor::timeoutTime, LED_B);
   outputPassFail(LED_B, LED_G, LED_R, Sensor::maxTempThreshold, maxTemp);
@@ -58,7 +66,7 @@ void initialization(Sensor SensorArr[]){
   for (int i = 0; i < Sensor::numSensors; i++){
     unsigned long sum = 0;
     for (int j = 0; j < 10; j++){
-      sum += SensorArr[i].readTemp(Sensor::ambientTempRegister);
+      sum += SensorArr[i].readTemp(Sensor::objTempRegister);
     }
     sum /= 10;
     SensorArr[i].setAmbientTemp(sum);
@@ -72,8 +80,8 @@ void initialization(Sensor SensorArr[]){
 int idleState(Sensor SensorArr[], int numSensors, uint8_t ambientTempRegister, uint8_t objTempRegister, int tempThreshold, uint8_t activateThreshold, int blueLED){
   while (true){
     for (int i = 0; i < numSensors; i++){
-      SensorArr[i].updateAmbientTemp(SensorArr[i].readTemp(Sensor::ambientTempRegister));                                                            //update ambient temperature    
-      if (abs(SensorArr[i].readTemp(Sensor::objTempRegister) - SensorArr[i].getAmbientTemp()) > Sensor::tempThreshold*100){                       //object detected on sensor
+      int newTemp = SensorArr[i].readTemp(Sensor::objTempRegister);                                                            //update ambient temperature    
+      if ((abs(newTemp) - SensorArr[i].getAmbientTemp()) > Sensor::tempThreshold){                       //object detected on sensor
         SensorArr[i].setObjectDetected(true);
         if (Sensor::numObjectsDetected >= Sensor::activateThreshold){                                                                             //leave idle if enough sensors have been activated
           Sensor::prevMillis = millis();                                                                                                        //record time when leaving idle for timeout
@@ -83,6 +91,7 @@ int idleState(Sensor SensorArr[], int numSensors, uint8_t ambientTempRegister, u
         }
       }
       else{
+        SensorArr[i].updateAmbientTemp(newTemp);
         SensorArr[i].setObjectDetected(false);                                                                                                    //sensor not detecting object but still in idle
       }
     }
@@ -93,6 +102,7 @@ int objDetectedState(Sensor SensorArr[], int numSensors, uint8_t objTempRegister
   while(true){
     for (int i = 0; i < numSensors; i++){
       int objTemp = SensorArr[i].readTemp(Sensor::objTempRegister);
+      //Serial.println(objTemp, DEC);
       if (objTemp > Sensor::maxTemp){                                                                                                             //update maxTemp if new peak found
         Sensor::maxTemp = objTemp;
         Sensor::maxSensor = SensorArr[i].getAddy();
@@ -101,7 +111,7 @@ int objDetectedState(Sensor SensorArr[], int numSensors, uint8_t objTempRegister
       if (objTemp > SensorArr[i].getMaxTempSensor()){
         SensorArr[i].setMaxTempSensor(objTemp);
       }
-      if (abs(objTemp - SensorArr[i].getAmbientTemp()) < tempThreshold*100){                                                                      //object no longer detected on sensor
+      if (abs(objTemp - SensorArr[i].getAmbientTemp()) < tempThreshold){                                                                      //object no longer detected on sensor
         SensorArr[i].setObjectDetected(false);
       }
       else{
@@ -126,9 +136,9 @@ int objDetectedState(Sensor SensorArr[], int numSensors, uint8_t objTempRegister
 
 
 void outputPassFail(int blueLED, int greenLED, int redLED, int maxThreshold, int maxTemp){
-  if (maxTemp > maxThreshold*100){
+  if (maxTemp > maxThreshold){
     for (int i = 0; i < 3; i++){
-      digitalWrite(redLED, HIGH);                                                             //flash 3 times if temp is too high (fail)
+      digitalWrite(redLED, HIGH);                                                            //flash 3 times if temp is too high (fail)
       delay(250);
       digitalWrite(redLED, LOW);
       delay(250);

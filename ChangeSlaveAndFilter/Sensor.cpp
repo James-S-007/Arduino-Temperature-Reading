@@ -66,7 +66,7 @@ uint16_t Sensor::readRAM(uint8_t ramAddress){
   }
 }
 
-bool Sensor::writeRAM(uint8_t ramAddress, uint8_t MSB, uint8_t LSB, uint8_t CRC1, uint8_t CRC2){
+bool Sensor::writeRAM(uint8_t ramAddress, uint8_t MSB, uint8_t LSB, uint8_t CRC1){
   
   I2c._start();
   I2c._sendAddress(this->address<<1);     //left shift w/ write bit
@@ -143,11 +143,11 @@ int Sensor::readTemp(uint8_t registerAddy){               //returns 100*temp (fo
     }
   }
   if (errCount ==3){
-    Serial.print("Error reading from sensor with address: ");
-    Serial.println(address, HEX);
-    Serial.println("Try resetting and ensuring all connections are secure");
-    Serial.println("If problem persists, replace hardware or call a technician");
-    delay(10000000000000000000000);                           //stop running program if sensor is not working properly
+    Serial.print("Error reading from sensor");
+    //Serial.println(address, HEX);
+    //Serial.println("Try resetting and ensuring all connections are secure");
+    //Serial.println("If problem persists, replace hardware or call a technician");
+    //delay(10000000000000000000000);                           //stop running program if sensor is not working properly
   }
   else{
     int result = MSB << 8;

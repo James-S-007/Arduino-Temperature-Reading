@@ -2,6 +2,9 @@
 #include "Arduino.h"
 #include <I2C.h>
 
+//78 degree ambient, does not detect person at 10ft
+
+
 const uint8_t Sensor::ambientTempRegister = 0x06;
 const uint8_t Sensor::objTempRegister = 0x07;
 unsigned long Sensor::prevMillis = 0;             //for timeout
@@ -15,8 +18,8 @@ uint8_t Sensor::triggerSensor = 0;
 int Sensor::timeoutTime = 5000;
 uint8_t Sensor::activateThreshold = 1;
 uint8_t Sensor::deactivateThreshold = 0;          //number of required sensors that no longer detect an object to return to idle
-int Sensor::tempThreshold = 6;
-int Sensor::maxTempThreshold = 100;
+int Sensor::tempThreshold = 600;                    //tempThreshold is *100; i.e. tempThreshold = 600 is 6.00 degree threshold
+int Sensor::maxTempThreshold = 9500;                //maxTempThreshold is *100; i.e. maxTempThreshold = 9750 is 97.50 degree
 
 Sensor::Sensor(uint8_t addy){
   address = addy;
@@ -25,6 +28,9 @@ Sensor::Sensor(uint8_t addy){
   numSensors += 1;
   ambientTemp = 0;
   maxTempSensor = 0;
+
+  //ambientArr[10] = {};
+  //index = 0;
 }
 
 uint8_t Sensor::getAddy(){
@@ -63,6 +69,14 @@ int Sensor::readTemp(uint8_t registerAddy){               //returns 100*temp (fo
     int result = MSB << 8;
     result |= LSB;
     result = ((result*.02 - 273.15)*9/5+32)*100;
+    /*
+    if (result >= 10000){
+      Serial.print("Sensor Number: ");
+      Serial.print(address, DEC);
+      Serial.print(", Temp: ");
+      Serial.println(result, DEC);
+    }
+    */
     return result;
   }
 }
