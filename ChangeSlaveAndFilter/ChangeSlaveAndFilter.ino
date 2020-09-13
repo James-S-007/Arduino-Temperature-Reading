@@ -11,7 +11,7 @@ Sensor SensorArr[1] = {Sensor0};
 //this is the one thing you change
 //addresses should be 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10
 
-uint8_t newSlaveAddress = 0x10;         //Valid addresses are from 0x00 to 0x7F (supports 127 devices)
+uint8_t newSlaveAddress = 0x01;         //Valid addresses are from 0x00 to 0x7F (supports 127 devices)
 
 //MUST REUPLOAD EACH TIME YOU CHANGE ADDRESS
 /////////////////////
@@ -29,6 +29,8 @@ uint8_t addressCRC0 = 0x6F;
 //uint8_t CRC1[16] = {0xAF, 0xDB, 0xF7, 0x33, 0x1F, 0x6B, 0x47, 0xE4, 0xC8, 0xBC, 0x90, 0x54, 0x78, 0x0C, 0x20, 0x4D};
 //uint8_t CRC2[16] = {0x5C, 0x28, 0x04, 0xC0, 0xEC, 0x98, 0xB4, 0x17, 0x3B, 0x4F, 0x63, 0xA7, 0x8B, 0xFF, 0xD3, 0xBE};
 uint8_t configRegister1 = 0x25;                     ///EEPROM access always follows form 001x xxxx so must add 0x20 to whatever address you wish to access!
+
+bool changeMade = false;
 
 
 void setup() {
@@ -50,20 +52,37 @@ void setup() {
   */
 
   //////////Changing Filter Settings from Address 0x00 (universal slave address)////////////////////////
-  
-  Serial.println(SensorArr[0].writeRAM(configRegister1, MSB, LSB, configCRC0));                     //clear then write B474 to configRegister1 for all sensors
-  Serial.println(SensorArr[0].readRAM(configRegister1), HEX);
-
-  /////////Changing Slave Address to newSlaveAddress///////////////////////////////////////////////////
-
-  Serial.println(SensorArr[0].writeRAM(SMBusAddress, 0x00, newSlaveAddress, addressCRC0));
-  Serial.println(SensorArr[0].readRAM(SMBusAddress), HEX);
-  
-  Serial.println("Power Cycle Device");
-  for (int i = 5; i > 0; i--){
-    Serial.println(i);
-    delay(1000);
+  if (SensorArr[0].readRAM(configRegister1) == 0xB474){
+    Serial.println("Filter settings already configured, moving on to address");
   }
+  else{ 
+    changeMade = true;
+    Serial.print("Old Filter Setting: ");
+    Serial.println(SensorArr[0].readRAM(configRegister1), HEX);
+    Serial.println(SensorArr[0].writeRAM(configRegister1, MSB, LSB, configCRC0));                     //clear then write B474 to configRegister1 for all sensors
+    Serial.println(SensorArr[0].readRAM(configRegister1), HEX);
+    Serial.println("Changed Filter");
+  }
+  delay(1000);
+  
+  /////////Changing Slave Address to newSlaveAddress///////////////////////////////////////////////////
+  if (SensorArr[0].readRAM(SMBusAddress) == newSlaveAddress){
+    Serial.println("Address already configured");
+  }
+  else{
+    changeMade = true;
+    Serial.println(SensorArr[0].writeRAM(SMBusAddress, 0x00, newSlaveAddress, addressCRC0));
+    Serial.println(SensorArr[0].readRAM(SMBusAddress), HEX);
+  }
+
+  if (changeMade == true){
+    Serial.println("Power Cycle Device");
+    for (int i = 5; i > 0; i--){
+      Serial.println(i);
+      delay(1000);
+    }
+  }
+
 }
 
 void loop() {

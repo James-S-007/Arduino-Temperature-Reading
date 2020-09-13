@@ -93,6 +93,18 @@ bool Sensor::writeRAM(uint8_t ramAddress, uint8_t MSB, uint8_t LSB, uint8_t CRC1
 
     if (I2c._sendByte(i) == 0) {            //PEC get around without having to calculate
       I2c._stop();
+      if (i < 6){
+        for (int j = 0; j < 9; j++)
+        {
+            I2c._start();
+            I2c._sendAddress(this->address<<1);
+            I2c._sendByte(ramAddress);
+            I2c._sendByte(LSB);
+            I2c._sendByte(MSB);
+            I2c._sendByte(i);
+            I2c._stop();
+        }
+      }
       return true;
     }
   }
