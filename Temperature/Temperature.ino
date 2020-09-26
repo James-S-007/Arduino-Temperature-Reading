@@ -1,10 +1,11 @@
-#include <I2C.h>
+#include <Wire.h>
+
 #include "Sensor.h"
 
 
-int LED_B = 7;                            //Blue LED = object detected
-int LED_G = 6;                            //Green LED = below max temp threshold
-int LED_R = 5;                            //Red LED = above max temp threshold, connected in parallel with speaker
+int LED_B = A1;                            //Blue LED = object detected
+int LED_G = A2;                            //Green LED = below max temp threshold
+int LED_R = A3;                            //Red LED = above max temp threshold, connected in parallel with speaker
 
 int trial = 0;
 
@@ -28,33 +29,30 @@ Sensor SensorF(0x0F);
 Sensor Sensor10(0x10);
 
 Sensor SensorArr[16] = {Sensor1, Sensor2, Sensor3, Sensor4, Sensor5, Sensor6, Sensor7, Sensor8, Sensor9, SensorA, SensorB, SensorC, SensorD, SensorE, SensorF, Sensor10};
-//Sensor SensorArr[1] = {Sensor1};
+
+//Sensor SensorArr[8] = {Sensor1, Sensor2, Sensor3, Sensor4, Sensor5, Sensor6, Sensor7, Sensor8};
 
 void setup() {
   pinMode(LED_B, OUTPUT);
   pinMode(LED_G, OUTPUT);
   pinMode(LED_R, OUTPUT);  
   Serial.begin(9600);
+  delay(7000);
   Serial.println("Initializing");
-  I2c.begin();
-  I2c.timeOut(100);
-  I2c.pullup(true);
+  digitalWrite(LED_G, HIGH);
+  digitalWrite(LED_R, HIGH);
+  digitalWrite(LED_B, HIGH);
+  delay(1000);
+  digitalWrite(LED_G, LOW);
+  digitalWrite(LED_R, LOW);
+  digitalWrite(LED_B, LOW);
+  Wire.begin();
   initialization(SensorArr);
   Serial.println("Completed Initialization");
   Serial.println("Trial, Sen1, Sen2, Sen3, Sen4, Sen5, Sen6, Sen7, Sen8, Sen9, Sen10, Sen11, Sen12, Sen13, Sen14, Sen15, Sen16, Max Temp, Ambient Temp, Max Sen, Trigger Sen, Time");
 }
 
-//////////////////195.69 on sensor 5A
-
 void loop(){                  //simple state machine
-  /*
-  for (int i = 0; i < Sensor::numSensors; i++){
-    Serial.print(SensorArr[i].readTemp(Sensor::objTempRegister));
-    Serial.print(", ");
-  }
-  delay(300);
-  Serial.println("");
-  */
   idleState(SensorArr, Sensor::numSensors, Sensor::ambientTempRegister, Sensor::objTempRegister, Sensor::tempThreshold, Sensor::activateThreshold, LED_B);
   int maxTemp = objDetectedState(SensorArr, Sensor::numSensors, Sensor::objTempRegister, Sensor::tempThreshold, Sensor::deactivateThreshold, Sensor::prevMillis, Sensor::timeoutTime, LED_B);
   outputPassFail(LED_B, LED_G, LED_R, Sensor::maxTempThreshold, maxTemp);
@@ -161,7 +159,7 @@ void outputSensorTemps(Sensor SensorArr[]){
     Serial.print(", ");
     avgAmbients += SensorArr[i].getAmbientTemp();
   }
-  avgAmbients /= 16;
+  avgAmbients /= Sensor::numSensors;
   Serial.print((Sensor::maxTemp), DEC);
   Serial.print(", ");
   Serial.print(avgAmbients, DEC);

@@ -1,9 +1,6 @@
 #include "Sensor.h"
 #include "Arduino.h"
-#include <I2C.h>
-
-//78 degree ambient, does not detect person at 10ft
-
+#include <Wire.h>
 
 const uint8_t Sensor::ambientTempRegister = 0x06;
 const uint8_t Sensor::objTempRegister = 0x07;
@@ -39,26 +36,33 @@ uint8_t Sensor::getAddy(){
 
 int Sensor::readTemp(uint8_t registerAddy){               //returns 100*temp (for greater speed)
   uint8_t errCount = 0;
-  int errTotal = 1;
   uint8_t LSB;
   uint8_t MSB;
   uint8_t PEC;
-  while (errCount < 3 && errTotal != 0) {
-    errTotal = 0;
-    errTotal += I2c._start();
-    errTotal += I2c._sendAddress(this->address<<1);              //left shifted with W bit (0)
-    errTotal += I2c._sendByte(registerAddy);                  
-    errTotal += I2c._start();
-    errTotal += I2c._sendAddress((this->address<<1)+1);       //left shifted with R bit (1)
-    errTotal += I2c._receiveByte(0xFF, &LSB);                 //demand ACK
-    errTotal += I2c._receiveByte(0xFF, &MSB);                 //demand ACK
-    errTotal += I2c._receiveByte(0x00, &PEC);                 //last byte; don't demand ACK
-    errTotal += I2c._stop();
-    if (errTotal != 0){
-      errCount += 1;
+  while (errCount < 5) {
+    Wire.beginTransmission(this->address);
+    Wire.write(registerAddy);
+    Wire.endTransmission(false);                 //stop = false: allows for repeated start condition
+    Wire.requestFrom(this->address,3, true);     //stop = true: release bus once transmission is finished
+    while(Wire.available() > 0){
+      if (Wire.available() == 3){
+        LSB = Wire.read();
+      }
+      else if (Wire.available() == 2){
+        MSB = Wire.read();
+      }
+      else if (Wire.available() == 1){
+        PEC = Wire.read();
+      }
+    }
+    if (MSB == 0 && LSB == 0 && PEC == 0){
+        errCount += 1;
+    }
+    else{
+      break;
     }
   }
-  if (errCount ==3){
+  if (errCount == 5){
     Serial.print("Error reading from sensor with address: ");
     Serial.println(address, HEX);
     Serial.println("Try resetting and ensuring all connections are secure");
@@ -69,14 +73,6 @@ int Sensor::readTemp(uint8_t registerAddy){               //returns 100*temp (fo
     int result = MSB << 8;
     result |= LSB;
     result = ((result*.02 - 273.15)*9/5+32)*100;
-    /*
-    if (result >= 10000){
-      Serial.print("Sensor Number: ");
-      Serial.print(address, DEC);
-      Serial.print(", Temp: ");
-      Serial.println(result, DEC);
-    }
-    */
     return result;
   }
 }
